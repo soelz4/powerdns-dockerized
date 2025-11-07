@@ -1,0 +1,9 @@
+recursor:
+  forward_zones_recurse:
+    - zone: example.com
+      forwarders:
+        - <server_ip>:1053
+    - zone: "."
+      forwarders:
+        - 8.8.8.8:53
+        - 1.1.1.1:53
