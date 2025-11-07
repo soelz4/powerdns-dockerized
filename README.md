@@ -39,14 +39,14 @@ services:
     container_name: postgres
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d pdns"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
     environment:
-      - POSTGRES_DB=pdns
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=1234
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - pdns-data:/var/lib/postgresql/data
       # - ./pdns-schema.sql:/docker-entrypoint-initdb.d/schema.sql
@@ -61,11 +61,11 @@ services:
     environment:
       - PDNS_gpgsql_host=postgres
       - PDNS_gpgsql_port=5432
-      - PDNS_gpgsql_user=postgres
-      - PDNS_gpgsql_password=1234
-      - PDNS_gpgsql_dbname=pdns
+      - PDNS_gpgsql_user=${POSTGRES_USER}
+      - PDNS_gpgsql_password=${POSTGRES_PASSWORD}
+      - PDNS_gpgsql_dbname=${POSTGRES_DB}
       - PDNS_api=yes
-      - PDNS_api_key=1234
+      - PDNS_api_key=${PDNS_API_KEY}
       - PDNS_webserver=yes
       - PDNS_webserver_address=0.0.0.0
       - PDNS_webserver-allow-from=0.0.0.0/0
@@ -83,7 +83,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      - PDNS_RECURSOR_API_KEY=1234
+      - PDNS_RECURSOR_API_KEY=${PDNS_RECURSOR_API_KEY}
     ports:
       # - "2053:53"
       # - "2053:53/udp"
@@ -101,7 +101,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      - PDNS_RECURSOR_API_KEY=1234
+      - PDNS_RECURSOR_API_KEY=${PDNS_RECURSOR_API_KEY}
     ports:
       # - "2053:53"
       # - "2053:53/udp"
@@ -118,7 +118,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      - DNSDIST_API_KEY=1234
+      - DNSDIST_API_KEY=${DNSDIST_API_KEY}
     ports:
       - "53:53"
       - "53:53/udp"
@@ -158,11 +158,11 @@ services:
       - PDNS_ADMIN_SQLA_DB_TYPE=postgres
       - PDNS_ADMIN_SQLA_DB_HOST=postgres
       - PDNS_ADMIN_SQLA_DB_PORT=5432
-      - PDNS_ADMIN_SQLA_DB_USER=postgres
-      - PDNS_ADMIN_SQLA_DB_PASSWORD=1234
+      - PDNS_ADMIN_SQLA_DB_USER=${POSTGRES_USER}
+      - PDNS_ADMIN_SQLA_DB_PASSWORD=${POSTGRES_PASSWORD}
       - PDNS_API_URL=http://pdns-auth:8081
       - PDNS_VERSION=4.9
-      - PDNS_API_KEY=1234
+      - PDNS_API_KEY=${PDNS_API_KEY}
 
 volumes:
   pdns-data:
