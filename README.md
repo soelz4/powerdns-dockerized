@@ -13,7 +13,7 @@ The PowerDNS Authoritative Server is a versatile authoritative server for hostin
 
 PowerDNS Service Schema
 
-![SCHEMA](./png/schema.png "PowerDNS Schema")
+![SCHEMA](./png/scheme.png "PowerDNS Schema")
 
 ## Prerequisites
 
