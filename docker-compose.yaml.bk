@@ -4,7 +4,7 @@ services:
     container_name: postgres
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pdns_admin -d pdns"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pdns"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -20,8 +20,6 @@ services:
     image: pschiffe/pdns-pgsql:4.9-alpine
     container_name: pdns-auth
     restart: unless-stopped
-    # deploy:
-    #   replicas: 2
     depends_on:
       db:
         condition: service_healthy
@@ -41,22 +39,38 @@ services:
       - "1053:53/udp"
       # - "8081:8081"
 
-  pdns-recursor:
+  pdns-recursor-1:
     # image: powerdns/pdns-recursor-50:5.0.12
     image: powerdns/pdns-recursor-master:latest
-    # container_name: pdns-recursor
+    container_name: pdns-recursor-1
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     environment:
       - PDNS_RECURSOR_API_KEY=1234
-    deploy:
-      replicas: 2
-    # ports:
+    ports:
       # - "2053:53"
       # - "2053:53/udp"
-      # - "8082:8082"
+      - "8082:8082"
+    volumes:
+      - ./recursor/recursor.conf:/etc/powerdns/recursor.conf
+      - ./recursor/recursor.d/fz.yml:/etc/powerdns/recursor.d/fz.yml
+
+  pdns-recursor-2:
+    # image: powerdns/pdns-recursor-50:5.0.12
+    image: powerdns/pdns-recursor-master:latest
+    container_name: pdns-recursor-2
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - PDNS_RECURSOR_API_KEY=1234
+    ports:
+      # - "2053:53"
+      # - "2053:53/udp"
+      - "8084:8082"
     volumes:
       - ./recursor/recursor.conf:/etc/powerdns/recursor.conf
       - ./recursor/recursor.d/fz.yml:/etc/powerdns/recursor.d/fz.yml
@@ -106,11 +120,7 @@ services:
       options:
         max-size: 50m
     environment:
-      - PDNS_ADMIN_SQLA_DB_TYPE=postgres
-      - PDNS_ADMIN_SQLA_DB_HOST=postgres
-      - PDNS_ADMIN_SQLA_DB_PORT=5432
-      - PDNS_ADMIN_SQLA_DB_USER=postgres
-      - PDNS_ADMIN_SQLA_DB_PASSWORD=1234
+      - SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://postgres:1234@postgres/pdns
       - PDNS_API_URL=http://pdns-auth:8081
       - PDNS_VERSION=4.9
       - PDNS_API_KEY=1234
