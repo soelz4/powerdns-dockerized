@@ -103,10 +103,10 @@ services:
     container_name: nginx
     restart: always
     ports:
-      - "80:80"
       - "443:443"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/certs:/etc/nginx/certs:ro
 
   app:
     image: powerdnsadmin/pda-legacy:master
@@ -120,11 +120,7 @@ services:
       options:
         max-size: 50m
     environment:
-      - PDNS_ADMIN_SQLA_DB_TYPE=postgres
-      - PDNS_ADMIN_SQLA_DB_HOST=postgres
-      - PDNS_ADMIN_SQLA_DB_PORT=5432
-      - PDNS_ADMIN_SQLA_DB_USER=${POSTGRES_USER}
-      - PDNS_ADMIN_SQLA_DB_PASSWORD=${POSTGRES_PASSWORD}
+      - SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}
       - PDNS_API_URL=http://pdns-auth:8081
       - PDNS_VERSION=4.9
       - PDNS_API_KEY=${PDNS_API_KEY}

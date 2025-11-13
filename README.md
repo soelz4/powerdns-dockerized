@@ -13,7 +13,7 @@ The PowerDNS Authoritative Server is a versatile authoritative server for hostin
 
 PowerDNS Service Schema
 
-![SCHEMA](./png/scheme.png "PowerDNS Schema")
+![SCHEMA](./png/schema.png "PowerDNS Schema")
 
 ## Prerequisites
 
@@ -138,10 +138,10 @@ services:
     container_name: nginx
     restart: always
     ports:
-      - "80:80"
       - "443:443"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/certs:/etc/nginx/certs:ro
 
   app:
     image: powerdnsadmin/pda-legacy:master
@@ -155,11 +155,7 @@ services:
       options:
         max-size: 50m
     environment:
-      - PDNS_ADMIN_SQLA_DB_TYPE=postgres
-      - PDNS_ADMIN_SQLA_DB_HOST=postgres
-      - PDNS_ADMIN_SQLA_DB_PORT=5432
-      - PDNS_ADMIN_SQLA_DB_USER=${POSTGRES_USER}
-      - PDNS_ADMIN_SQLA_DB_PASSWORD=${POSTGRES_PASSWORD}
+      - SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}
       - PDNS_API_URL=http://pdns-auth:8081
       - PDNS_VERSION=4.9
       - PDNS_API_KEY=${PDNS_API_KEY}
@@ -173,15 +169,28 @@ volumes:
 
 ```conf
 server {
-    listen 80;
+    listen 443 ssl;
+    # server_name 172.18.42.4;
+    server_name pdns.example.com;
+
+    ssl_certificate /etc/nginx/certs/public.crt;
+    ssl_certificate_key /etc/nginx/certs/private.key;
 
     location / {
-        proxy_pass http://powerdns_admin:80;   # container name + internal port
+        proxy_pass http://powerdns_admin:80;	# container name + internal port
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Scheme $scheme;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
+}
+
+server {
+    listen 80;
+    # server_name 172.18.42.4;
+    server_name pdns.example.com;
+    return 301 https://$host$request_uri;
 }
 ```
 
@@ -190,11 +199,31 @@ server {
 1 - Clone the Repo
 
 ```bash
-git clone https://bit.behsacorp.com/scm/pdns/powerdns-dockerized.git
+git clone https://github.com/soelz4/powerdns-dockerized.git
 ```
 
 ```bash
 cd powerdns-dockerized
+```
+
+```bash
+vim .env
+```
+
+```.env
+# ----- POSTGRES -----
+POSTGRES_USER=<postgres-user>
+POSTGRES_PASSWORD=<postgres-password>
+POSTGRES_DB=<postgres-db>
+
+# ----- PDNS-AUTH -----
+PDNS_API_KEY=<pdns-api-key>
+
+# ----- PDNS-RECURSOR -----
+PDNS_RECURSOR_API_KEY=<recursor-api-key>
+
+# ----- PDNS-DNSDIST -----
+DNSDIST_API_KEY=<dnsdist-api-key>
 ```
 
 2 - Run with Docker Compose
